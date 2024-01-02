@@ -537,6 +537,7 @@ var board = {
   get_board_obj: function (file, rank) {
     return this.sq[file][this.size - 1 - rank].board_object;
   },
+
   incmovecnt: function () {
     this.save_board_pos();
     if (this.moveshown === this.movecount) {
@@ -545,15 +546,22 @@ var board = {
       $(".moveno" + this.movecount + ":first").addClass("curmove");
     }
     this.movecount++;
-    document.getElementById("move-sound").play();
+    // document.getElementById("move-sound").play();
 
     $("#player-me").toggleClass("selectplayer");
     $("#player-opp").toggleClass("selectplayer");
 
     // In a scratch game I'm playing both colors
     if (this.scratch) {
-      if (this.mycolor === "white") this.mycolor = "black";
-      else this.mycolor = "white";
+      if (this.mycolor === "white") {
+        console.log("switching to black");
+        document.getElementById("turnText").innerHTML = "Player's Turn";
+        this.mycolor = "black";
+      } else {
+        console.log("switching to white");
+        document.getElementById("turnText").innerHTML = "AI's Turn";
+        this.mycolor = "white";
+      }
     }
 
     this.ismymove = this.checkifmymove();
@@ -668,9 +676,11 @@ var board = {
         if (this.mycolor === "white") {
           this.whitepiecesleft--;
           pcs = this.whitepiecesleft;
+          // document.getElementById("turnText").innerHTML = "Player's Turn";
         } else {
           this.blackpiecesleft--;
           pcs = this.blackpiecesleft;
+          // document.getElementById("turnText").innerHTML = "AI's Turn";
         }
         if (this.scratch) {
           var over = this.checkroadwin();
@@ -909,9 +919,11 @@ var board = {
 
     let result = this.result;
     if (result === "R-0") {
-      result = "White wins";
+      // result = "White wins";
+      result = "AI wins";
     } else if (result === "0-R") {
-      result = "Black wins";
+      // result = "Black wins";
+      result = "Player wins";
     } else if (result === "1/2-1/2") {
       result = "Draw";
     }
@@ -1499,15 +1511,10 @@ var board = {
     return tomove === this.mycolor;
   },
   is_white_piece_to_move: function () {
-    // white always goes first, so must pick up a black piece
-    if (this.movecount === 0) return false;
-    // black always goes second, so must pick up a white piece
-    if (this.movecount === 1) return true;
-    // after that, if we've made an even number of moves, then it is
-    // white's turn, and she must pick up a white piece
-    isEven = this.movecount % 2 === 0;
-    console.log("isEven = ", isEven);
-    return isEven;
+    // make the first move white and all player only moves once
+    if (this.movecount === 0) return true;
+    if (this.movecount === 1) return false;
+    return this.movecount % 2 === 0;
   },
   select: function (obj) {
     obj.position.y += stack_selection_height;
