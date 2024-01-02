@@ -676,11 +676,13 @@ var board = {
         if (this.mycolor === "white") {
           this.whitepiecesleft--;
           pcs = this.whitepiecesleft;
-          // document.getElementById("turnText").innerHTML = "Player's Turn";
+
+          // random piece dan masukkan kedalam board
+          var randomPiece = this.getfromstack(false, false);
+          this.pushPieceOntoSquare(hlt, randomPiece);
         } else {
           this.blackpiecesleft--;
           pcs = this.blackpiecesleft;
-          // document.getElementById("turnText").innerHTML = "AI's Turn";
         }
         if (this.scratch) {
           var over = this.checkroadwin();
