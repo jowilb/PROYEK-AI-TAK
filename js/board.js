@@ -676,13 +676,44 @@ var board = {
         if (this.mycolor === "white") {
           this.whitepiecesleft--;
           pcs = this.whitepiecesleft;
-
-          // random piece dan masukkan kedalam board
-          var randomPiece = this.getfromstack(false, false);
-          this.pushPieceOntoSquare(hlt, randomPiece);
         } else {
           this.blackpiecesleft--;
           pcs = this.blackpiecesleft;
+
+          var randomPos = Math.floor(Math.random() * 25);
+          while (this.board_objects[randomPos].onsquare) {
+            randomPos = Math.floor(Math.random() * 25);
+          }
+
+          var randomPiece = Math.floor(Math.random() * 10);
+          while (!this.piece_objects[randomPiece].iswhitepiece) {
+            randomPiece = Math.floor(Math.random() * 10);
+          }
+
+          this.pushPieceOntoSquare(
+            this.board_objects[randomPos],
+            this.piece_objects[randomPiece]
+          );
+
+          var sqname = this.squarename(
+            this.board_objects[randomPos].file,
+            this.board_objects[randomPos].rank
+          );
+
+          var stone = "Piece";
+          if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
+          else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
+
+          console.log(
+            "Place " + this.movecount,
+            this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
+            stone,
+            sqname
+          );
+
+          this.mycolor = "black";
+          this.ismymove = true;
+          this.ismymove = this.checkifmymove();
         }
         if (this.scratch) {
           var over = this.checkroadwin();
@@ -694,6 +725,7 @@ var board = {
             }
           }
         }
+
         this.incmovecnt();
       }
       return;
