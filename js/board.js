@@ -538,69 +538,70 @@ var board = {
   get_board_obj: function (file, rank) {
     return this.sq[file][this.size - 1 - rank].board_object;
   },
-  ai_turn: function() {
+  ai_turn: function () {
     var randomPos = Math.floor(Math.random() * 25);
-      while (this.board_objects[randomPos].onsquare) {
-        randomPos = Math.floor(Math.random() * 25);
-      }
+    while (this.board_objects[randomPos].onsquare) {
+      randomPos = Math.floor(Math.random() * 25);
+    }
 
-      var randomPiece = Math.floor(Math.random() * 10);
+    var randomPiece = Math.floor(Math.random() * 10);
 
-      if(this.movecount === 0)
-      {
-        while (this.piece_objects[randomPiece].iswhitepiece) {
-          randomPiece = Math.floor(Math.random() * 10);
-        }
+    if (this.movecount === 0) {
+      while (this.piece_objects[randomPiece].iswhitepiece) {
+        randomPiece = Math.floor(Math.random() * 10);
       }
-      else
-      {
-        while (!this.piece_objects[randomPiece].iswhitepiece) {
-          randomPiece = Math.floor(Math.random() * 10);
-        }
+    } else {
+      while (!this.piece_objects[randomPiece].iswhitepiece) {
+        randomPiece = Math.floor(Math.random() * 10);
       }
-    
-      if (this.piece_objects[randomPiece].onsquare) {
-        while (this.piece_objects[randomPiece].onsquare) {
-          randomPiece = Math.floor(Math.random() * 10);
-        }
-      } else {
-        this.pushPieceOntoSquare(
-          this.board_objects[randomPos],
-          this.piece_objects[randomPiece]
-        );
+    }
+
+    if (this.piece_objects[randomPiece].onsquare) {
+      while (this.piece_objects[randomPiece].onsquare) {
+        randomPiece = Math.floor(Math.random() * 10);
       }
-      var stone = "Piece";
-      if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
-      else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
-      var sqname = this.squarename(
-        this.board_objects[randomPos].file,
-        this.board_objects[randomPos].rank
+    } else {
+      this.pushPieceOntoSquare(
+        this.board_objects[randomPos],
+        this.piece_objects[randomPiece]
       );
-      var msg = "P " + sqname;
-      if (stone !== "Piece") msg += " " + stone.charAt(0);
-      this.sendmove(msg);
-      this.notatePmove(sqname, stone.charAt(0));
-      console.log(
-        "Place " + this.movecount,
-        this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
-        stone,
-        sqname
-      );
+    }
+    var stone = "Piece";
+    if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
+    else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
+    var sqname = this.squarename(
+      this.board_objects[randomPos].file,
+      this.board_objects[randomPos].rank
+    );
+    var msg = "P " + sqname;
+    if (stone !== "Piece") msg += " " + stone.charAt(0);
+    this.sendmove(msg);
+    this.notatePmove(sqname, stone.charAt(0));
+    console.log(
+      "Place " + this.movecount,
+      this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
+      stone,
+      sqname
+    );
 
-      if (this.mycolor === "white") {
-        this.whitepiecesleft--;
-        pcs = this.whitepiecesleft;
-      } else {
-        this.blackpiecesleft--;
-        pcs = this.blackpiecesleft;
-      }
-      
-      document.getElementById("turnText").innerHTML = "AI's Turn";
-      this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
-      setTimeout(() => this.incmovecnt(), 2000);
+    const textCurrent = "Place " + this.movecount + " " + stone + " " + sqname;
+    document.getElementById("currentMove").innerHTML = textCurrent;
+
+    if (this.mycolor === "white") {
+      this.whitepiecesleft--;
+      pcs = this.whitepiecesleft;
+    } else {
+      this.blackpiecesleft--;
+      pcs = this.blackpiecesleft;
+    }
+
+    document.getElementById("turnText").innerHTML = "AI's Turn";
+    this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
+    setTimeout(() => this.incmovecnt(), 2000);
   },
   incmovecnt: function () {
-    if (this.movecount == 0 || this.mycolor !== this.boardside) this.reverseboard();
+    if (this.movecount == 0 || this.mycolor !== this.boardside)
+      this.reverseboard();
     this.save_board_pos();
     if (this.moveshown === this.movecount) {
       this.moveshown++;
@@ -756,6 +757,10 @@ var board = {
         } else {
           this.blackpiecesleft--;
           pcs = this.blackpiecesleft;
+
+          const textCurrent =
+            "Place " + this.movecount + " " + stone + " " + sqname;
+          document.getElementById("currentMove").innerHTML = textCurrent;
         }
 
         if (this.scratch) {
@@ -1133,10 +1138,11 @@ var board = {
     return true;
   },
   reverseboard: function () {
-    if(this.movecount === 0)
+    if (this.movecount === 0) {
       this.boardside = this.boardside === "black" ? "black" : "white";
-    else
+    } else {
       this.boardside = this.boardside === "white" ? "black" : "white";
+    }
     if (localStorage.getItem("auto_rotate") !== "false") {
       camera.position.z = -camera.position.z;
       camera.position.x = -camera.position.x;
