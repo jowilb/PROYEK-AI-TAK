@@ -546,14 +546,74 @@ var board = {
       $(".moveno" + this.movecount + ":first").addClass("curmove");
     }
     this.movecount++;
-    // document.getElementById("move-sound").play();
 
     $("#player-me").toggleClass("selectplayer");
     $("#player-opp").toggleClass("selectplayer");
 
-    // In a scratch game I'm playing both colors
     if (this.scratch) {
       if (this.mycolor === "white") {
+        var randomPos = Math.floor(Math.random() * 25);
+        while (this.board_objects[randomPos].onsquare) {
+          randomPos = Math.floor(Math.random() * 25);
+        }
+
+        var randomPiece = Math.floor(Math.random() * 10);
+        while (!this.piece_objects[randomPiece].iswhitepiece) {
+          randomPiece = Math.floor(Math.random() * 10);
+        }
+
+        if (this.piece_objects[randomPiece].onsquare) {
+          while (this.piece_objects[randomPiece].onsquare) {
+            randomPiece = Math.floor(Math.random() * 10);
+          }
+        } else {
+          this.pushPieceOntoSquare(
+            this.board_objects[randomPos],
+            this.piece_objects[randomPiece]
+          );
+        }
+
+        var stone = "Piece";
+        if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
+        else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
+
+        var sqname = this.squarename(
+          this.board_objects[randomPos].file,
+          this.board_objects[randomPos].rank
+        );
+
+        var msg = "P " + sqname;
+        if (stone !== "Piece") msg += " " + stone.charAt(0);
+        this.sendmove(msg);
+        this.notatePmove(sqname, stone.charAt(0));
+
+        console.log(
+          "Place " + this.movecount,
+          this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
+          stone,
+          sqname
+        );
+
+        var pcs;
+        if (this.mycolor === "white") {
+          this.whitepiecesleft--;
+          pcs = this.whitepiecesleft;
+        } else {
+          this.blackpiecesleft--;
+          pcs = this.blackpiecesleft;
+        }
+
+        if (this.scratch) {
+          var over = this.checkroadwin();
+          if (!over) {
+            over = this.checksquaresover();
+            if (!over && pcs <= 0) {
+              this.findwhowon();
+              this.gameover();
+            }
+          }
+        }
+
         console.log("switching to black");
         document.getElementById("turnText").innerHTML = "Player's Turn";
         this.mycolor = "black";
@@ -637,6 +697,7 @@ var board = {
       }
     }
   },
+
   leftclick: function () {
     this.remove_total_highlight();
     if (!this.ismymove) {
@@ -679,42 +740,8 @@ var board = {
         } else {
           this.blackpiecesleft--;
           pcs = this.blackpiecesleft;
-
-          var randomPos = Math.floor(Math.random() * 25);
-          while (this.board_objects[randomPos].onsquare) {
-            randomPos = Math.floor(Math.random() * 25);
-          }
-
-          var randomPiece = Math.floor(Math.random() * 10);
-          while (!this.piece_objects[randomPiece].iswhitepiece) {
-            randomPiece = Math.floor(Math.random() * 10);
-          }
-
-          this.pushPieceOntoSquare(
-            this.board_objects[randomPos],
-            this.piece_objects[randomPiece]
-          );
-
-          var sqname = this.squarename(
-            this.board_objects[randomPos].file,
-            this.board_objects[randomPos].rank
-          );
-
-          var stone = "Piece";
-          if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
-          else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
-
-          console.log(
-            "Place " + this.movecount,
-            this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
-            stone,
-            sqname
-          );
-
-          this.mycolor = "black";
-          this.ismymove = true;
-          this.ismymove = this.checkifmymove();
         }
+
         if (this.scratch) {
           var over = this.checkroadwin();
           if (!over) {
@@ -1538,10 +1565,10 @@ var board = {
     return "OUTSIDE";
   },
   checkifmymove: function () {
+    if (this.isPlayEnded) return false;
     if (this.scratch) return true;
     if (this.observing) return false;
     var tomove = this.movecount % 2 === 0 ? "white" : "black";
-    //console.log('tomove = ', tomove, this.mycolor, tomove===this.mycolor);
     return tomove === this.mycolor;
   },
   is_white_piece_to_move: function () {
