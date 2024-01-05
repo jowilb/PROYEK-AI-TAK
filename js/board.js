@@ -584,7 +584,17 @@ var board = {
       sqname
     );
 
-    const textCurrent = "Place " + this.movecount + " " + stone + " " + sqname;
+    const color = this.piece_objects[randomPiece].iswhitepiece
+      ? "White"
+      : "Black";
+
+    const textCurrent =
+      "Place " +
+      color +
+      " " +
+      stone +
+      " " +
+      this.squarename(hlt.file, hlt.rank);
     document.getElementById("currentMove").innerHTML = textCurrent;
 
     if (this.mycolor === "white") {
@@ -744,6 +754,16 @@ var board = {
           this.squarename(hlt.file, hlt.rank)
         );
 
+        const color = sel.iswhitepiece ? "White" : "Black";
+
+        const textCurrent =
+          "Place " +
+          color +
+          " " +
+          stone +
+          " " +
+          this.squarename(hlt.file, hlt.rank);
+
         var sqname = this.squarename(hlt.file, hlt.rank);
         var msg = "P " + sqname;
         if (stone !== "Piece") msg += " " + stone.charAt(0);
@@ -757,9 +777,6 @@ var board = {
         } else {
           this.blackpiecesleft--;
           pcs = this.blackpiecesleft;
-
-          const textCurrent =
-            "Place " + this.movecount + " " + stone + " " + sqname;
           document.getElementById("currentMove").innerHTML = textCurrent;
         }
 
