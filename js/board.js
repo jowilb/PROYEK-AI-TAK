@@ -539,6 +539,10 @@ var board = {
     return this.sq[file][this.size - 1 - rank].board_object;
   },
   ai_turn: function () {
+    if (this.isPlayEnded) {
+      return;
+    }
+
     var randomPos = Math.floor(Math.random() * 25);
     while (this.board_objects[randomPos].onsquare) {
       randomPos = Math.floor(Math.random() * 25);
@@ -561,6 +565,11 @@ var board = {
         randomPiece = Math.floor(Math.random() * 10);
       }
     } else {
+      // cek apakah di board yang ingin diisi sudah ada piece
+      while (this.board_objects[randomPos].onsquare) {
+        randomPos = Math.floor(Math.random() * 25);
+      }
+
       this.pushPieceOntoSquare(
         this.board_objects[randomPos],
         this.piece_objects[randomPiece]
@@ -594,7 +603,10 @@ var board = {
       " " +
       stone +
       " " +
-      this.squarename(hlt.file, hlt.rank);
+      this.squarename(
+        this.board_objects[randomPos].file,
+        this.board_objects[randomPos].rank
+      );
     document.getElementById("currentMove").innerHTML = textCurrent;
 
     if (this.mycolor === "white") {
@@ -609,9 +621,11 @@ var board = {
     this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
     setTimeout(() => this.incmovecnt(), 2000);
   },
+
   incmovecnt: function () {
-    if (this.movecount == 0 || this.mycolor !== this.boardside)
+    if (this.movecount == 0 || this.mycolor !== this.boardside) {
       this.reverseboard();
+    }
     this.save_board_pos();
     if (this.moveshown === this.movecount) {
       this.moveshown++;
@@ -756,19 +770,13 @@ var board = {
 
         const color = sel.iswhitepiece ? "White" : "Black";
 
-        const textCurrent =
-          "Place " +
-          color +
-          " " +
-          stone +
-          " " +
-          this.squarename(hlt.file, hlt.rank);
-
         var sqname = this.squarename(hlt.file, hlt.rank);
         var msg = "P " + sqname;
         if (stone !== "Piece") msg += " " + stone.charAt(0);
         this.sendmove(msg);
         this.notatePmove(sqname, stone.charAt(0));
+
+        const textCurrent = "Place " + color + " " + stone + " " + sqname;
 
         var pcs;
         if (this.mycolor === "white") {
@@ -1155,6 +1163,10 @@ var board = {
     return true;
   },
   reverseboard: function () {
+    if (this.isPlayEnded) {
+      return;
+    }
+
     if (this.movecount === 0) {
       this.boardside = this.boardside === "black" ? "black" : "white";
     } else {
