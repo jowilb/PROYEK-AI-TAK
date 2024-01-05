@@ -441,6 +441,7 @@ var board = {
     document.getElementById("player-me").className = "";
 
     if (this.mycolor !== this.boardside) this.reverseboard();
+    setTimeout(() => this.ai_turn(), 1000);
   },
   initCounters: function (startMove) {
     this.movestart = startMove;
@@ -537,8 +538,69 @@ var board = {
   get_board_obj: function (file, rank) {
     return this.sq[file][this.size - 1 - rank].board_object;
   },
+  ai_turn: function() {
+    var randomPos = Math.floor(Math.random() * 25);
+      while (this.board_objects[randomPos].onsquare) {
+        randomPos = Math.floor(Math.random() * 25);
+      }
 
+      var randomPiece = Math.floor(Math.random() * 10);
+
+      if(this.movecount === 0)
+      {
+        while (this.piece_objects[randomPiece].iswhitepiece) {
+          randomPiece = Math.floor(Math.random() * 10);
+        }
+      }
+      else
+      {
+        while (!this.piece_objects[randomPiece].iswhitepiece) {
+          randomPiece = Math.floor(Math.random() * 10);
+        }
+      }
+    
+      if (this.piece_objects[randomPiece].onsquare) {
+        while (this.piece_objects[randomPiece].onsquare) {
+          randomPiece = Math.floor(Math.random() * 10);
+        }
+      } else {
+        this.pushPieceOntoSquare(
+          this.board_objects[randomPos],
+          this.piece_objects[randomPiece]
+        );
+      }
+      var stone = "Piece";
+      if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
+      else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
+      var sqname = this.squarename(
+        this.board_objects[randomPos].file,
+        this.board_objects[randomPos].rank
+      );
+      var msg = "P " + sqname;
+      if (stone !== "Piece") msg += " " + stone.charAt(0);
+      this.sendmove(msg);
+      this.notatePmove(sqname, stone.charAt(0));
+      console.log(
+        "Place " + this.movecount,
+        this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
+        stone,
+        sqname
+      );
+
+      if (this.mycolor === "white") {
+        this.whitepiecesleft--;
+        pcs = this.whitepiecesleft;
+      } else {
+        this.blackpiecesleft--;
+        pcs = this.blackpiecesleft;
+      }
+      
+      document.getElementById("turnText").innerHTML = "AI's Turn";
+      this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
+      setTimeout(() => this.incmovecnt(), 2000);
+  },
   incmovecnt: function () {
+    if (this.movecount == 0 || this.mycolor !== this.boardside) this.reverseboard();
     this.save_board_pos();
     if (this.moveshown === this.movecount) {
       this.moveshown++;
@@ -550,59 +612,16 @@ var board = {
     $("#player-me").toggleClass("selectplayer");
     $("#player-opp").toggleClass("selectplayer");
 
+    var pcs;
+    if (this.mycolor === "white") {
+      this.whitepiecesleft--;
+      pcs = this.whitepiecesleft;
+    } else {
+      this.blackpiecesleft--;
+      pcs = this.blackpiecesleft;
+    }
     if (this.scratch) {
       if (this.mycolor === "white") {
-        var randomPos = Math.floor(Math.random() * 25);
-        while (this.board_objects[randomPos].onsquare) {
-          randomPos = Math.floor(Math.random() * 25);
-        }
-
-        var randomPiece = Math.floor(Math.random() * 10);
-        while (!this.piece_objects[randomPiece].iswhitepiece) {
-          randomPiece = Math.floor(Math.random() * 10);
-        }
-
-        if (this.piece_objects[randomPiece].onsquare) {
-          while (this.piece_objects[randomPiece].onsquare) {
-            randomPiece = Math.floor(Math.random() * 10);
-          }
-        } else {
-          this.pushPieceOntoSquare(
-            this.board_objects[randomPos],
-            this.piece_objects[randomPiece]
-          );
-        }
-
-        var stone = "Piece";
-        if (this.piece_objects[randomPiece].iscapstone) stone = "Capstone";
-        else if (this.piece_objects[randomPiece].isstanding) stone = "Wall";
-
-        var sqname = this.squarename(
-          this.board_objects[randomPos].file,
-          this.board_objects[randomPos].rank
-        );
-
-        var msg = "P " + sqname;
-        if (stone !== "Piece") msg += " " + stone.charAt(0);
-        this.sendmove(msg);
-        this.notatePmove(sqname, stone.charAt(0));
-
-        console.log(
-          "Place " + this.movecount,
-          this.piece_objects[randomPiece].iswhitepiece ? "White" : "Black",
-          stone,
-          sqname
-        );
-
-        var pcs;
-        if (this.mycolor === "white") {
-          this.whitepiecesleft--;
-          pcs = this.whitepiecesleft;
-        } else {
-          this.blackpiecesleft--;
-          pcs = this.blackpiecesleft;
-        }
-
         if (this.scratch) {
           var over = this.checkroadwin();
           if (!over) {
@@ -614,13 +633,10 @@ var board = {
           }
         }
 
-        console.log("switching to black");
         document.getElementById("turnText").innerHTML = "Player's Turn";
         this.mycolor = "black";
       } else {
-        console.log("switching to white");
-        document.getElementById("turnText").innerHTML = "AI's Turn";
-        this.mycolor = "white";
+        setTimeout(() => this.ai_turn(), 1000);
       }
     }
 
@@ -752,8 +768,7 @@ var board = {
             }
           }
         }
-
-        this.incmovecnt();
+        setTimeout(() => this.incmovecnt(), 2000);
       }
       return;
     }
@@ -1118,7 +1133,10 @@ var board = {
     return true;
   },
   reverseboard: function () {
-    this.boardside = this.boardside === "white" ? "black" : "white";
+    if(this.movecount === 0)
+      this.boardside = this.boardside === "black" ? "black" : "white";
+    else
+      this.boardside = this.boardside === "white" ? "black" : "white";
     if (localStorage.getItem("auto_rotate") !== "false") {
       camera.position.z = -camera.position.z;
       camera.position.x = -camera.position.x;
@@ -1573,8 +1591,8 @@ var board = {
   },
   is_white_piece_to_move: function () {
     // make the first move white and all player only moves once
-    if (this.movecount === 0) return true;
-    if (this.movecount === 1) return false;
+    if (this.movecount === 1) return true;
+    if (this.movecount === 0) return false;
     return this.movecount % 2 === 0;
   },
   select: function (obj) {
