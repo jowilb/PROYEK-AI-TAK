@@ -538,10 +538,41 @@ var board = {
   get_board_obj: function (file, rank) {
     return this.sq[file][this.size - 1 - rank].board_object;
   },
+
+  ai_block_menang: function () {
+    for (var i = 0; i < this.size; i++) {
+      var countBlack = 0;
+      for (var j = 0; j < this.size; j++) {
+        var sq = this.get_board_obj(i, j);
+        var stk = this.get_stack(sq);
+        if (stk.length > 0) {
+          if (!stk[stk.length - 1].iswhitepiece) {
+            countBlack++;
+          }
+        } else {
+          countBlack = 0;
+        }
+
+        if (countBlack >= 3) {
+          console.log("Block haha");
+          var sq = this.get_board_obj(i, j - 1);
+          var stk = this.get_stack(sq);
+          if (stk.length > 0) {
+            if (stk[stk.length - 1].iswhitepiece) {
+              this.pushPieceOntoSquare(sq, this.getfromstack(false, false));
+            }
+          }
+        }
+      }
+    }
+  },
+
   ai_turn: function () {
     if (this.isPlayEnded) {
       return;
     }
+
+    this.ai_block_menang();
 
     var randomPos = Math.floor(Math.random() * 25);
     while (this.board_objects[randomPos].onsquare) {
@@ -565,7 +596,6 @@ var board = {
         randomPiece = Math.floor(Math.random() * 10);
       }
     } else {
-      // cek apakah di board yang ingin diisi sudah ada piece
       while (this.board_objects[randomPos].onsquare) {
         randomPos = Math.floor(Math.random() * 25);
       }
@@ -743,6 +773,11 @@ var board = {
     this.remove_total_highlight();
     if (!this.ismymove) {
       return;
+    }
+
+    // jika movecount > 0 dan mycolor != hitam maka tidak bisa pick up piece
+    if (this.movecount > 0 && this.mycolor !== "black") {
+      alert("You can't pick up piece");
     }
 
     // if the board position is valid and we've got a piece in our hand then place it
@@ -1042,6 +1077,7 @@ var board = {
     this.create(sz, col, false, false);
     this.initEmpty();
   },
+
   findwhowon: function () {
     var whitec = 0,
       blackc = 0;
@@ -1059,6 +1095,7 @@ var board = {
     else if (whitec > blackc) this.result = "F-0";
     else this.result = "0-F";
   },
+
   checkroadwin: function () {
     for (var i = 0; i < this.size; i++) {
       for (var j = 0; j < this.size; j++) {
@@ -1193,13 +1230,13 @@ var board = {
   notate: function (txt) {
     var res = false;
     if (
-      txt === "R-0" ||
-      txt === "0-R" ||
-      txt === "F-0" ||
-      txt === "0-F" ||
-      txt === "1-0" ||
-      txt === "0-1" ||
-      txt === "1/2-1/2"
+      txt === "R-0" || // R-0 is when White makes a road and wins
+      txt === "0-R" || // 0-R is when Black makes a road and wins
+      txt === "F-0" || // F-0 is when White covers all squares and wins
+      txt === "0-F" || // 0-F is when Black covers all squares and wins
+      txt === "1-0" || // 1-0 is when White resigns
+      txt === "0-1" || // 0-1 is when Black resigns
+      txt === "1/2-1/2" // 1/2-1/2 is when the game is a draw
     ) {
       var ol = document.getElementById("moveslist");
       var row = ol.insertRow();
@@ -1445,7 +1482,6 @@ var board = {
     }
   },
   rightup: function () {
-    console.log("right up");
     this.remove_total_highlight();
   },
   //bring pieces to original positions
@@ -1493,7 +1529,6 @@ var board = {
     var prevdontanim = dontanimate;
     dontanimate = true;
 
-    console.log("showmove " + no);
     this.moveshown = no;
     this.resetpieces();
     this.apply_board_pos(this.moveshown);
