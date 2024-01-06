@@ -578,14 +578,13 @@ var board = {
     while (this.board_objects[randomPos].onsquare) {
       randomPos = Math.floor(Math.random() * 25);
     }
-
-    var randomPiece = Math.floor(Math.random() * 10);
-
+    var randomPiece = 3
     if (this.movecount === 0) {
       while (this.piece_objects[randomPiece].iswhitepiece) {
         randomPiece = Math.floor(Math.random() * 10);
       }
-    } else {
+    } 
+    else {
       while (!this.piece_objects[randomPiece].iswhitepiece) {
         randomPiece = Math.floor(Math.random() * 10);
       }
@@ -650,6 +649,7 @@ var board = {
     document.getElementById("turnText").innerHTML = "AI's Turn";
     this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
     setTimeout(() => this.incmovecnt(), 2000);
+    console.log(this.sq);
   },
 
   incmovecnt: function () {
@@ -1099,51 +1099,53 @@ var board = {
   checkroadwin: function () {
     for (var i = 0; i < this.size; i++) {
       for (var j = 0; j < this.size; j++) {
-        var cur_st = this.sq[i][j];
-        cur_st.graph = -1;
-        if (cur_st.length === 0) continue;
+          var cur_st = this.sq[i][j];
+          cur_st.graph = -1;
+          if (cur_st.length === 0)
+              continue;
 
-        var ctop = cur_st[cur_st.length - 1];
-        if (ctop.isstanding && !ctop.iscapstone) continue;
+          var ctop = cur_st[cur_st.length - 1];
+          if (ctop.isstanding && !ctop.iscapstone)
+              continue;
 
-        cur_st.graph = (i + j * this.size).toString();
+          cur_st.graph = (i + j * this.size).toString();
 
-        if (i - 1 >= 0) {
-          var left_st = this.sq[i - 1][j];
-          if (left_st.length !== 0) {
-            var ltop = left_st[left_st.length - 1];
-            if (!(ltop.isstanding && !ltop.iscapstone)) {
-              if (ctop.iswhitepiece === ltop.iswhitepiece) {
-                for (var r = 0; r < this.size; r++) {
-                  for (var c = 0; c < this.size; c++) {
-                    if (this.sq[r][c].graph === cur_st.graph) {
-                      this.sq[r][c].graph = left_st.graph;
-                    }
+          if (i - 1 >= 0) {
+              var left_st = this.sq[i - 1][j];
+              if (left_st.length !== 0) {
+                  var ltop = left_st[left_st.length - 1];
+                  if (!(ltop.isstanding && !ltop.iscapstone)) {
+                      if (ctop.iswhitepiece === ltop.iswhitepiece) {
+                          for (var r = 0; r < this.size; r++) {
+                              for (var c = 0; c < this.size; c++) {
+                                  if (this.sq[r][c].graph === cur_st.graph) {
+                                      this.sq[r][c].graph = left_st.graph;
+                                  }
+                              }
+                          }
+                      }
                   }
-                }
               }
-            }
           }
-        }
-        if (j - 1 >= 0) {
-          var top_st = this.sq[i][j - 1];
-          if (top_st.length !== 0) {
-            var ttop = top_st[top_st.length - 1];
-            if (!(ttop.isstanding && !ttop.iscapstone)) {
-              if (ctop.iswhitepiece === ttop.iswhitepiece) {
-                for (var r = 0; r < this.size; r++) {
-                  for (var c = 0; c < this.size; c++) {
-                    if (this.sq[r][c].graph === cur_st.graph) {
-                      this.sq[r][c].graph = top_st.graph;
-                    }
+          if (j - 1 >= 0) {
+              var top_st = this.sq[i][j - 1];
+              if (top_st.length !== 0) {
+                  var ttop = top_st[top_st.length - 1];
+                  if (!(ttop.isstanding && !ttop.iscapstone)) {
+                      if (ctop.iswhitepiece === ttop.iswhitepiece) {
+                          for (var r = 0; r < this.size; r++) {
+                              for (var c = 0; c < this.size; c++) {
+                                  if (this.sq[r][c].graph === cur_st.graph) {
+                                      this.sq[r][c].graph = top_st.graph;
+                                  }
+                              }
+                          }
+                      }
                   }
-                }
               }
-            }
           }
-        }
       }
-    }
+  }
     var whitewin = false;
     var blackwin = false;
     //            console.log("--------");
