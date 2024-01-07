@@ -479,7 +479,8 @@ var board = {
     // draw the border around the squares
     boardFactory.makeBorders(scene);
   },
-  // addpieces: add the pieces to the scene, not on the board
+
+  // addpieces Buat piece di pinggir board
   addpieces: function () {
     var piece;
     for (var i = 0; i < this.tottiles; i++) {
@@ -666,30 +667,35 @@ var board = {
   },
 
   movementAddPiece: function (file, rank) {
-    //go up
     if (rank + 1 < 5 && this.sq[file][rank + 1].length === 0) {
       return "up";
-    }
-    //go down
-    else if (rank - 1 >= 0 && this.sq[file][rank - 1].length === 0) {
+    } else if (rank - 1 >= 0 && this.sq[file][rank - 1].length === 0) {
       return "down";
-    }
-    //go left
-    else if (file - 1 >= 0 && this.sq[file - 1][rank].length === 0) {
+    } else if (file - 1 >= 0 && this.sq[file - 1][rank].length === 0) {
       return "left";
+    } else if (file + 1 < 5 && this.sq[file + 1][rank].length === 0) {
+      return "right";
+    } else {
+      return "none";
     }
-    //go right
-    else if (file + 1 < 5 && this.sq[file + 1][rank].length === 0) {
-      return true;
-    }
-    return false;
   },
 
   choosePiece: function () {
     if (this.movecount == 0) {
       return 1;
     }
-    var randomIndex = Math.floor(Math.random() * 22) * 2;
+    var randomIndex = Math.floor(Math.random() * 22) * 2; //buat ngambil selalu warna putih soalnya putih selalu genap
+
+    while (this.piece_objects[randomIndex].onsquare) {
+      randomIndex = Math.floor(Math.random() * 22) * 2;
+    }
+
+    if (!this.piece_objects[randomIndex].iswhitepiece) {
+      while (!this.piece_objects[randomIndex].iswhitepiece) {
+        randomIndex = Math.floor(Math.random() * 22) * 2;
+      }
+    }
+
     return randomIndex;
   },
 
@@ -707,14 +713,30 @@ var board = {
         position = 24; // Position E1
       }
     } else {
-      var choose = 0;
-      if (choose == 0) {
+      var block = false;
+      var countblack = 0;
+      for (let i = 0; i < this.size; i++) {
+        for (let j = 0; j < this.size; j++) {
+          var cur_st = this.sq[i][j];
+          if (cur_st.length === 0) continue;
+          var ctop = cur_st[cur_st.length - 1];
+          if (!ctop.iswhitepiece) {
+            countblack++;
+            if (countblack >= 3) {
+              block = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (block) {
         for (let i = 0; i < this.size; i++) {
           for (let j = 0; j < this.size; j++) {
             var cur_st = this.sq[i][j];
             if (cur_st.length === 0) continue;
             var ctop = cur_st[cur_st.length - 1];
-            if (ctop.iswhitepiece) {
+            if (!ctop.iswhitepiece) {
               var valid = this.movementAddPiece(i, j);
               if (valid == "up") {
                 position = this.getPosition(i, j + 1);
@@ -726,7 +748,42 @@ var board = {
                 position = this.getPosition(i - 1, j);
               }
               if (valid == "right") {
-                position = this.getPosition(i + 1, j + 1);
+                position = this.getPosition(i + 1, j);
+              }
+            }
+          }
+        }
+      }
+
+      var choose = 0;
+      if (choose == 0 && !block) {
+        for (let i = 0; i < this.size; i++) {
+          for (let j = 0; j < this.size; j++) {
+            var cur_st = this.sq[i][j];
+            if (cur_st.length === 0) continue;
+            var ctop = cur_st[cur_st.length - 1];
+            if (ctop.iswhitepiece) {
+              var valid = this.movementAddPiece(i, j);
+              console.log("AI Valid", valid);
+              if (valid == "up") {
+                position = this.getPosition(i, j + 1);
+                choose = 1;
+                break;
+              }
+              if (valid == "down") {
+                position = this.getPosition(i, j - 1);
+                choose = 1;
+                break;
+              }
+              if (valid == "left") {
+                position = this.getPosition(i - 1, j);
+                choose = 1;
+                break;
+              }
+              if (valid == "right") {
+                position = this.getPosition(i + 1, j);
+                choose = 1;
+                break;
               }
             }
           }
@@ -750,7 +807,7 @@ var board = {
       return;
     }
 
-    //milih posisi board
+    //pilih posisi board
     var randomPiece = this.choosePiece();
     var randomPos = this.choosePosition();
     // while (this.board_objects[randomPos].onsquare) {
