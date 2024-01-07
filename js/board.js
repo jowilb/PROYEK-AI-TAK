@@ -686,15 +686,15 @@ var board = {
     }
     var randomIndex = Math.floor(Math.random() * 22) * 2; //buat ngambil selalu warna putih soalnya putih selalu genap
 
-    while (this.piece_objects[randomIndex].onsquare) {
+    while (this.piece_objects[randomIndex].onsquare && !this.piece_objects[randomIndex].iswhitepiece) {
       randomIndex = Math.floor(Math.random() * 22) * 2;
     }
 
-    if (!this.piece_objects[randomIndex].iswhitepiece) {
-      while (!this.piece_objects[randomIndex].iswhitepiece) {
-        randomIndex = Math.floor(Math.random() * 22) * 2;
-      }
-    }
+    // if (!this.piece_objects[randomIndex].iswhitepiece) {
+    //   while (!this.piece_objects[randomIndex].iswhitepiece) {
+    //     randomIndex = Math.floor(Math.random() * 22) * 2;
+    //   }
+    // }
 
     return randomIndex;
   },
@@ -714,8 +714,9 @@ var board = {
       }
     } else {
       var block = false;
-      var countblack = 0;
+      //cek vertikal
       for (let i = 0; i < this.size; i++) {
+        var countblack = 0;
         for (let j = 0; j < this.size; j++) {
           var cur_st = this.sq[i][j];
           if (cur_st.length === 0) continue;
@@ -723,37 +724,70 @@ var board = {
           if (!ctop.iswhitepiece) {
             countblack++;
             if (countblack >= 3) {
-              block = true;
-              break;
+              for(let k = 0; k < this.size; k++)
+              {
+                if(this.sq[i][k].length === 0)
+                {
+                  position = this.getPosition(i, k);
+                  block = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      if(!block)
+      {
+        // cek horizontal
+        for (let i = 0; i < this.size; i++) {
+          var countblack = 0;
+          for (let j = 0; j < this.size; j++) {
+            var cur_st = this.sq[j][i];
+            if (cur_st.length === 0) continue;
+            var ctop = cur_st[cur_st.length - 1];
+            if (!ctop.iswhitepiece) {
+              countblack++;
+              if (countblack >= 3) {
+                for(let k = 0; k < this.size; k++)
+                {
+                  if(this.sq[k][i].length === 0)
+                  {
+                    position = this.getPosition(k, i);
+                    block = true;
+                    break;
+                  }
+                }
+              }
             }
           }
         }
       }
 
-      if (block) {
-        for (let i = 0; i < this.size; i++) {
-          for (let j = 0; j < this.size; j++) {
-            var cur_st = this.sq[i][j];
-            if (cur_st.length === 0) continue;
-            var ctop = cur_st[cur_st.length - 1];
-            if (!ctop.iswhitepiece) {
-              var valid = this.movementAddPiece(i, j);
-              if (valid == "up") {
-                position = this.getPosition(i, j + 1);
-              }
-              if (valid == "down") {
-                position = this.getPosition(i, j - 1);
-              }
-              if (valid == "left") {
-                position = this.getPosition(i - 1, j);
-              }
-              if (valid == "right") {
-                position = this.getPosition(i + 1, j);
-              }
-            }
-          }
-        }
-      }
+      // if (block) {
+      //   for (let i = 0; i < this.size; i++) {
+      //     for (let j = 0; j < this.size; j++) {
+      //       var cur_st = this.sq[i][j];
+      //       if (cur_st.length === 0) continue;
+      //       var ctop = cur_st[cur_st.length - 1];
+      //       if (!ctop.iswhitepiece) {
+      //         var valid = this.movementAddPiece(i, j);
+      //         if (valid == "up") {
+      //           position = this.getPosition(i, j + 1);
+      //         }
+      //         if (valid == "down") {
+      //           position = this.getPosition(i, j - 1);
+      //         }
+      //         if (valid == "left") {
+      //           position = this.getPosition(i - 1, j);
+      //         }
+      //         if (valid == "right") {
+      //           position = this.getPosition(i + 1, j);
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
 
       var choose = 0;
       if (choose == 0 && !block) {
@@ -882,8 +916,8 @@ var board = {
       pcs = this.blackpiecesleft;
     }
 
-    document.getElementById("turnText").innerHTML = "AI's Turn";
-    this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
+    // document.getElementById("turnText").innerHTML = "AI's Turn";
+    // this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
     setTimeout(() => this.incmovecnt(), 2000);
   },
 
@@ -926,6 +960,8 @@ var board = {
         document.getElementById("turnText").innerHTML = "Player's Turn";
         this.mycolor = "black";
       } else {
+        document.getElementById("turnText").innerHTML = "AI's Turn";
+        this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
         setTimeout(() => this.ai_turn(), 1000);
       }
     }
@@ -1009,10 +1045,11 @@ var board = {
     if (!this.ismymove) {
       return;
     }
-
+    
     // jika movecount > 0 dan mycolor != hitam maka tidak bisa pick up piece
-    if (this.movecount > 0 && this.mycolor !== "black") {
-      alert("You can't pick up piece");
+    if (this.mycolor !== "black") {
+      return;
+      // alert("You can't pick up piece");
     }
 
     // if the board position is valid and we've got a piece in our hand then place it
