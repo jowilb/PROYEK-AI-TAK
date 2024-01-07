@@ -532,7 +532,7 @@ var board = {
   file: function (no) {
     return String.fromCharCode("A".charCodeAt(0) + no);
   },
-  //file is no. rank is no.
+
   squarename: function (file, rank) {
     return this.file(file) + (rank + 1);
   },
@@ -686,7 +686,10 @@ var board = {
     }
     var randomIndex = Math.floor(Math.random() * 22) * 2; //buat ngambil selalu warna putih soalnya putih selalu genap
 
-    while (this.piece_objects[randomIndex].onsquare && !this.piece_objects[randomIndex].iswhitepiece) {
+    while (
+      this.piece_objects[randomIndex].onsquare &&
+      !this.piece_objects[randomIndex].iswhitepiece
+    ) {
       randomIndex = Math.floor(Math.random() * 22) * 2;
     }
 
@@ -723,11 +726,9 @@ var board = {
           var ctop = cur_st[cur_st.length - 1];
           if (!ctop.iswhitepiece) {
             countblack++;
-            if (countblack >= 3) {
-              for(let k = 0; k < this.size; k++)
-              {
-                if(this.sq[i][k].length === 0)
-                {
+            if (countblack >= 1) {
+              for (let k = 0; k < this.size; k++) {
+                if (this.sq[i][k].length === 0) {
                   position = this.getPosition(i, k);
                   block = true;
                   break;
@@ -737,8 +738,7 @@ var board = {
           }
         }
       }
-      if(!block)
-      {
+      if (!block) {
         // cek horizontal
         for (let i = 0; i < this.size; i++) {
           var countblack = 0;
@@ -749,10 +749,8 @@ var board = {
             if (!ctop.iswhitepiece) {
               countblack++;
               if (countblack >= 3) {
-                for(let k = 0; k < this.size; k++)
-                {
-                  if(this.sq[k][i].length === 0)
-                  {
+                for (let k = 0; k < this.size; k++) {
+                  if (this.sq[k][i].length === 0) {
                     position = this.getPosition(k, i);
                     block = true;
                     break;
@@ -825,6 +823,7 @@ var board = {
       } else {
       }
     }
+    block = false;
     return position;
   },
 
@@ -1045,7 +1044,7 @@ var board = {
     if (!this.ismymove) {
       return;
     }
-    
+
     // jika movecount > 0 dan mycolor != hitam maka tidak bisa pick up piece
     if (this.mycolor !== "black") {
       return;
