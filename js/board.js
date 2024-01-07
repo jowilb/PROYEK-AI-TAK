@@ -598,12 +598,159 @@ var board = {
   },
 
   calculateConnectedStone: function (pieceColor) {
+    var maxScore = 0;
+    for (let i = 0; i < this.size; i++) {
+      var score = 0;
+      for (let j = 0; j < this.size; j++) {
+        if (pieceColor === "white") {
+          if (
+            this.sq[i][j].length > 0 &&
+            this.sq[i][j][this.sq[i][j].length - 1].iswhitepiece &&
+            !this.sq[i][j][this.sq[i][j].length - 1].isstanding
+          ) {
+            score += 1;
+            if (
+              j + 1 < this.size &&
+              score > 0 &&
+              this.sq[i][j + 1].length > 0 &&
+              this.sq[i][j + 1][this.sq[i][j + 1].length - 1].iswhitepiece &&
+              !this.sq[i][j + 1][this.sq[i][j + 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              j + 1;
+            } else if (
+              j - 1 >= 0 &&
+              score > 0 &&
+              this.sq[i][j - 1].length > 0 &&
+              this.sq[i][j - 1][this.sq[i][j - 1].length - 1].iswhitepiece &&
+              !this.sq[i][j - 1][this.sq[i][j - 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              j - 1;
+            }
+          } else {
+            if (score > maxScore) {
+              maxScore = score;
+            }
+            score = 0;
+          }
+        } else if (pieceColor === "black") {
+          if (
+            this.sq[i][j].length > 0 &&
+            !this.sq[i][j][this.sq[i][j].length - 1].iswhitepiece &&
+            !this.sq[i][j][this.sq[i][j].length - 1].isstanding
+          ) {
+            score += 1;
+            if (
+              j + 1 < this.size &&
+              score > 0 &&
+              this.sq[i][j + 1].length > 0 &&
+              !this.sq[i][j + 1][this.sq[i][j + 1].length - 1].iswhitepiece &&
+              !this.sq[i][j + 1][this.sq[i][j + 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              j + 1;
+            } else if (
+              j - 1 >= 0 &&
+              score > 0 &&
+              this.sq[i][j - 1].length > 0 &&
+              !this.sq[i][j - 1][this.sq[i][j - 1].length - 1].iswhitepiece &&
+              !this.sq[i][j - 1][this.sq[i][j - 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              j - 1;
+            }
+          } else {
+            if (score > maxScore) {
+              maxScore = score;
+            }
+            score = 0;
+          }
+        }
+      }
+    }
+
+    for (let i = 0; i < this.size; i++) {
+      var score = 0;
+      for (let j = 0; j < this.size; j++) {
+        if (pieceColor === "white") {
+          if (
+            this.sq[j][i].length > 0 &&
+            this.sq[j][i][this.sq[j][i].length - 1].iswhitepiece &&
+            !this.sq[j][i][this.sq[j][i].length - 1].isstanding
+          ) {
+            score += 1;
+            if (
+              i + 1 < this.size &&
+              score > 0 &&
+              this.sq[j][i + 1].length > 0 &&
+              this.sq[j][i + 1][this.sq[j][i + 1].length - 1].iswhitepiece &&
+              !this.sq[j][i + 1][this.sq[j][i + 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              i + 1;
+            } else if (
+              i - 1 >= 0 &&
+              score > 0 &&
+              this.sq[j][i - 1].length > 0 &&
+              this.sq[j][i - 1][this.sq[j][i - 1].length - 1].iswhitepiece &&
+              !this.sq[j][i - 1][this.sq[j][i - 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              i - 1;
+            }
+          } else {
+            if (score > maxScore) {
+              maxScore = score;
+            }
+            score = 0;
+          }
+        } else if (pieceColor === "black") {
+          if (
+            this.sq[j][i].length > 0 &&
+            !this.sq[j][i][this.sq[j][i].length - 1].iswhitepiece &&
+            !this.sq[j][i][this.sq[j][i].length - 1].isstanding
+          ) {
+            score += 1;
+            if (
+              i + 1 < this.size &&
+              score > 0 &&
+              this.sq[j][i + 1].length > 0 &&
+              !this.sq[j][i + 1][this.sq[j][i + 1].length - 1].iswhitepiece &&
+              !this.sq[j][i + 1][this.sq[j][i + 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              i + 1;
+            } else if (
+              i - 1 >= 0 &&
+              score > 0 &&
+              this.sq[j][i - 1].length > 0 &&
+              !this.sq[j][i - 1][this.sq[j][i - 1].length - 1].iswhitepiece &&
+              !this.sq[j][i - 1][this.sq[j][i - 1].length - 1].isstanding
+            ) {
+              score += 0.5;
+              i - 1;
+            }
+          } else {
+            if (score > maxScore) {
+              maxScore = score;
+            }
+            score = 0;
+          }
+        }
+      }
+    }
+    return maxScore;
+  },
+
+  calculateControlledStone: function (pieceColor) {
     var visited = [];
-    var score = 1;
+    var score = 0;
     for (var i = 0; i < this.size; i++) {
       for (var j = 0; j < this.size; j++) {
         var cur_st = this.sq[i][j];
         if (cur_st.length === 0) continue;
+
         var ctop = cur_st[cur_st.length - 1];
         if (ctop.iswhitepiece && pieceColor === "white") {
           visited.push([i, j]);
@@ -613,24 +760,61 @@ var board = {
       }
     }
 
-    for (var i = 0; i < this.size; i++) {
-      for (var j = 0; j < this.size; j++) {
-        var cur_st = this.sq[i][j];
+    for (var i = 0; i < visited.length; i++) {
+      var file, rank, cur_st, ctop;
+      if (visited[i][0] + 1 < this.size) {
+        file = visited[i][0] + 1;
+        rank = visited[i][1];
+        cur_st = this.sq[file][rank];
+        if (cur_st.length > 0) {
+          ctop = cur_st[cur_st.length - 1];
+          if (!ctop.iscapstone && !ctop.isstanding) {
+            score += 1;
+          }
+        }
         if (cur_st.length === 0) {
-          blank.push([i, j]);
+          score += 1;
         }
       }
-    }
-
-    for (let prev = 0; prev < blank.length; prev++) {
-      for (let next = 0; next < visited.length; next++) {
-        var prevPiece = blank[prev];
-        var nextPiece = visited[next];
-        if (
-          (Math.abs(prevPiece[0] - nextPiece[0]) == 1) ^
-            (Math.abs(prevPiece[1] - nextPiece[1]) == 1) &&
-          (prevPiece[0] == nextPiece[0]) ^ (prevPiece[1] == nextPiece[1])
-        ) {
+      if (visited[i][0] - 1 >= 0) {
+        file = visited[i][0] - 1;
+        rank = visited[i][1];
+        cur_st = this.sq[file][rank];
+        if (cur_st.length > 0) {
+          ctop = cur_st[cur_st.length - 1];
+          if (!ctop.iscapstone && !ctop.isstanding) {
+            score += 1;
+          }
+        }
+        if (cur_st.length === 0) {
+          score += 1;
+        }
+      }
+      if (visited[i][1] + 1 < this.size) {
+        file = visited[i][0];
+        rank = visited[i][1] + 1;
+        cur_st = this.sq[file][rank];
+        if (cur_st.length > 0) {
+          ctop = cur_st[cur_st.length - 1];
+          if (!ctop.iscapstone && !ctop.isstanding) {
+            score += 1;
+          }
+        }
+        if (cur_st.length === 0) {
+          score += 1;
+        }
+      }
+      if (visited[i][1] - 1 >= 0) {
+        file = visited[i][0];
+        rank = visited[i][1] - 1;
+        cur_st = this.sq[file][rank];
+        if (cur_st.length > 0) {
+          ctop = cur_st[cur_st.length - 1];
+          if (!ctop.iscapstone && !ctop.isstanding) {
+            score += 1;
+          }
+        }
+        if (cur_st.length === 0) {
           score += 1;
         }
       }
@@ -638,31 +822,76 @@ var board = {
     return score;
   },
 
+  calculatedCenterStone: function (pieceColor) {
+    var score = 0;
+    var center = Math.floor(this.size / 2);
+    for (var i = 0; i < this.size; i++) {
+      var cur_st = this.sq[i][center];
+      if (cur_st.length === 0) continue;
+
+      var ctop = cur_st[cur_st.length - 1];
+      if (ctop.iswhitepiece && pieceColor === "white") {
+        score += 1;
+      } else if (!ctop.iswhitepiece && pieceColor === "black") {
+        score += 1;
+      }
+    }
+
+    for (var i = 0; i < this.size; i++) {
+      var cur_st = this.sq[center][i];
+      if (cur_st.length === 0) continue;
+
+      var ctop = cur_st[cur_st.length - 1];
+      if (ctop.iswhitepiece && pieceColor === "white") {
+        score += 1;
+      } else if (!ctop.iswhitepiece && pieceColor === "black") {
+        score += 1;
+      }
+    }
+
+    return score;
+  },
+
   calculateStaticBoardEvaluator: function () {
-    var whiteFlattstone = this.calculateFlattstone("white") * 5;
-    var whiteStandstone = this.calculateStandstone("white") * 3;
-    var whiteCapstone = this.calculateCapstone("white") * 10;
+    var whiteStone =
+      (this.calculateFlattstone("white") +
+        this.calculateStandstone("white") +
+        this.calculateCapstone("white") +
+        this.calculateCapstone("white")) *
+      10;
+    var whiteFlattstone = this.calculateFlattstone("white") * 10;
+    var whiteStandstone = this.calculateStandstone("white") * 5;
+    var whiteCapstone = this.calculateCapstone("white") * 20;
     var whitepieceConnected = this.calculateConnectedStone("white") * 20;
-    var whitepieceControlled = this.calculateControlledStone("white") * 4;
+    var whitepieceControlled = this.calculateControlledStone("white") * 5;
 
-    var blackFlattstone = this.calculateFlattstone("black") * 5;
-    var blackStandstone = this.calculateStandstone("black") * 3;
-    var blackCapstone = this.calculateCapstone("black") * 10;
+    var blackStone =
+      (this.calculateFlattstone("black") +
+        this.calculateStandstone("black") +
+        this.calculateCapstone("black") +
+        this.calculateCapstone("black")) *
+      10;
+    var blackFlattstone = this.calculateFlattstone("black") * 10;
+    var blackStandstone = this.calculateStandstone("black") * 5;
+    var blackCapstone = this.calculateCapstone("black") * 20;
     var blackpieceConnected = this.calculateConnectedStone("black") * 20;
-    var blackpieceControlled = this.calculateControlledStone("black") * 4;
+    var blackpieceControlled = this.calculateControlledStone("black") * 5;
 
-    var calculated =
+    var white =
+      whiteStone +
       whiteFlattstone +
       whiteStandstone +
       whiteCapstone +
       whitepieceConnected +
-      whitepieceControlled -
-      blackFlattstone -
-      blackStandstone -
-      blackCapstone -
-      blackpieceConnected -
+      whitepieceControlled;
+    var black =
+      blackStone +
+      blackFlattstone +
+      blackStandstone +
+      blackCapstone +
+      blackpieceConnected +
       blackpieceControlled;
-
+    var calculated = white - black;
     return calculated;
   },
 
@@ -678,6 +907,71 @@ var board = {
     } else {
       return "none";
     }
+  },
+
+  getAllEmptyPositions: function () {
+    let moves = [];
+    for (let file = 0; file < this.size; file++) {
+      for (let rank = 0; rank < this.size; rank++) {
+        if (this.sq[file][rank].length === 0) {
+          moves.push({ file: file, rank: rank });
+        }
+      }
+    }
+    return moves;
+  },
+
+  getPieceNotOnSquare: function (color) {
+    return this.piece_objects.findIndex(
+      (piece) => piece.iswhitepiece === color && !piece.onsquare,
+    );
+  },
+
+  calculateMinimax: function (depth, isMaximizingPlayer) {
+    if (depth === 0 || this.isPlayEnded) {
+      return this.calculateStaticBoardEvaluator();
+    }
+
+    if (isMaximizingPlayer) {
+      let maxEval = -Infinity;
+      let moves = this.getAllEmptyPositions();
+      for (let i = 0; i < moves.length; i++) {
+        let piece = this.getPieceNotOnSquare(true);
+        this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[piece]);
+        let eval = this.calculateMinimax(depth - 1, false);
+        this.sq[moves[i].file][moves[i].rank].pop();
+        maxEval = Math.max(maxEval, eval);
+      }
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      let moves = this.getAllEmptyPositions();
+      for (let i = 0; i < moves.length; i++) {
+        let piece = this.getPieceNotOnSquare(false);
+        this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[piece]);
+        let eval = this.calculateMinimax(depth - 1, true);
+        this.sq[moves[i].file][moves[i].rank].pop();
+        minEval = Math.min(minEval, eval);
+      }
+      return minEval;
+    }
+  },
+
+  getBestMove: function (depth, isMaximizingPlayer) {
+    let bestEval = isMaximizingPlayer ? -Infinity : Infinity;
+    let bestMove;
+    let moves = this.getAllEmptyPositions();
+    for (let i = 0; i < moves.length; i++) {
+      let piece = this.getPieceNotOnSquare(true);
+      this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[piece]);
+      let eval = this.calculateMinimax(depth - 1, !isMaximizingPlayer);
+      this.sq[moves[i].file][moves[i].rank].pop();
+      if (isMaximizingPlayer ? eval > bestEval : eval < bestEval) {
+        bestEval = eval;
+        bestMove = moves[i];
+      }
+    }
+    return bestMove;
   },
 
   choosePiece: function () {
@@ -820,6 +1114,8 @@ var board = {
             }
           }
         }
+        var bestMove = this.getBestMove(3, true);
+        position = this.getPosition(bestMove.file, bestMove.rank);
       } else {
       }
     }
@@ -906,6 +1202,7 @@ var board = {
         this.board_objects[randomPos].rank
       );
     document.getElementById("currentMove").innerHTML = textCurrent;
+    document.getElementById("SBE").innerHTML = "SBE: " + this.calculateStaticBoardEvaluator();
 
     if (this.mycolor === "white") {
       this.whitepiecesleft--;
