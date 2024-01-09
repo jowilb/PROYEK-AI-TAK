@@ -931,10 +931,11 @@ var board = {
     }
     else if(!type){
       return this.piece_objects.findIndex(
-        (piece) => piece.iswhitepiece === color && piece.iscapstone && piece.onsquare,
+        (piece) => piece.iswhitepiece === color && piece.iscapstone && !piece.onsquare,
       );
     }
   },
+
 
   calculateMinimax: function (depth, isMaximizingPlayer) {
     if (depth === 0 || this.isPlayEnded) {
@@ -943,7 +944,10 @@ var board = {
 
     if (isMaximizingPlayer) {//Max
       let maxEval = -Infinity;
+      let maxEval2 = -Infinity;
+      let maxEval3 = -Infinity;
       let moves = this.getAllEmptyPositions();
+
       let flattPiece = this.getPieceNotOnSquare(true,true);//choose flatt piece
       if(flattPiece != -1){
         for (let i = 0; i < moves.length; i++) {
@@ -962,7 +966,7 @@ var board = {
           let eval = this.calculateMinimax(depth - 1, false);
           this.sq[moves[i].file][moves[i].rank].pop();
           this.piece_objects[standPiece].isstanding = false
-          maxEval = Math.max(maxEval, eval);
+          maxEval2 = Math.max(maxEval2, eval);
         }
       }
 
@@ -972,15 +976,18 @@ var board = {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[capPiece]);
           let eval = this.calculateMinimax(depth - 1, false);
           this.sq[moves[i].file][moves[i].rank].pop();
-          maxEval = Math.max(maxEval, eval);
+          maxEval3 = Math.max(maxEval3, eval);
         }
       }
 
-      return maxEval;
+      return Math.max(maxEval,maxEval2,maxEval3);
     } else {//Min
-      let minEval = Infinity;
+      let minEval = Infinity
+      let minEval2 = Infinity
+      let minEval3 = Infinity;
       let moves = this.getAllEmptyPositions();
-      let flattPiece = this.getPieceNotOnSquare(true,true);//choose flatt piece
+
+      let flattPiece = this.getPieceNotOnSquare(false,true);//choose flattstone
       if(flattPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[flattPiece]);
@@ -990,7 +997,7 @@ var board = {
         }
       }
 
-      let standPiece = this.getPieceNotOnSquare(true,true);//choose stand piece
+      let standPiece = this.getPieceNotOnSquare(false,true);//choose standstone
       if(standPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.piece_objects[standPiece].isstanding = true;
@@ -998,27 +1005,32 @@ var board = {
           let eval = this.calculateMinimax(depth - 1, true);
           this.sq[moves[i].file][moves[i].rank].pop();
           this.piece_objects[standPiece].isstanding = false
-          minEval = Math.min(minEval, eval);
+          minEval2 = Math.min(minEval2, eval);
         }
       }
 
-      let capPiece = this.getPieceNotOnSquare(true,false);//choose stand piece
+      let capPiece = this.getPieceNotOnSquare(false,false);//choose capstone
       if(capPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[capPiece]);
           let eval = this.calculateMinimax(depth - 1, true);
           this.sq[moves[i].file][moves[i].rank].pop();
-          minEval = Math.min(minEval, eval);
+          minEval3 = Math.min(minEval3, eval);
         }
       }
-      return minEval;
+      return Math.min(minEval,minEval2,minEval3);
     }
   },
 
   getBestMove: function (depth, isMaximizingPlayer) {
     let bestEval = isMaximizingPlayer ? -Infinity : Infinity;
+    let bestEval2 = isMaximizingPlayer ? -Infinity : Infinity;
+    let bestEval3 = isMaximizingPlayer ? -Infinity : Infinity;
     let bestMove;
+    let bestMove2;
+    let bestMove3;
     let bestPiece;
+    let PositionMove
 
     let moves = this.getAllEmptyPositions();//get all move add piece
     let flattPiece = this.getPieceNotOnSquare(true,true);//choose flatt piece
@@ -1031,7 +1043,6 @@ var board = {
         if (isMaximizingPlayer ? eval > bestEval : eval < bestEval) {
           bestEval = eval;
           bestMove = moves[i];
-          bestPiece = 0
         }
       }
     }
@@ -1044,10 +1055,9 @@ var board = {
         let eval = this.calculateMinimax(depth - 1, !isMaximizingPlayer);
         this.sq[moves[i].file][moves[i].rank].pop();
         this.piece_objects[standPiece].isstanding = false
-        if (isMaximizingPlayer ? eval > bestEval : eval < bestEval) {
-          bestEval = eval;
-          bestMove = moves[i];
-          bestPiece = 1
+        if (isMaximizingPlayer ? eval > bestEval2 : eval < bestEval2) {
+          bestEval2 = eval;
+          bestMove2 = moves[i];
         }
       }
     }
@@ -1058,26 +1068,56 @@ var board = {
         this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[capPiece]);
         let eval = this.calculateMinimax(depth - 1, !isMaximizingPlayer);
         this.sq[moves[i].file][moves[i].rank].pop();
-        if (isMaximizingPlayer ? eval > bestEval : eval < bestEval) {
-          bestEval = eval;
-          bestMove = moves[i];
-          bestPiece = 2
+        if (isMaximizingPlayer ? eval > bestEval3 : eval < bestEval3) {
+          bestEval3 = eval;
+          bestMove3 = moves[i];
         }
       }
     }
 
-    if(bestPiece == 0){
-      bestPiece = flattPiece
+    if(bestEval > bestEval2 && bestEval > bestEval3){
+      return {bestMove : bestMove, bestPiece : flattPiece}
     }
-    else if(bestPiece == 1){
+    else if(bestEval2 > bestEval && bestEval2 > bestEval3){
       bestPiece = standPiece
       this.piece_objects[bestPiece].isstanding = true;
       this.piece_objects[bestPiece].rotation.x = -Math.PI / 2;
+      return {bestMove : bestMove2, bestPiece : bestPiece}
     }
-    else if(bestPiece == 2){
-      bestPiece = capPiece
+    else if(bestEval3 > bestEval && bestEval3 > bestEval2){
+      return {bestMove : bestMove3, bestPiece : capPiece}
     }
-    return {bestMove:bestMove,bestPiece:bestPiece};
+    else if(bestEval == bestEval2 && bestEval > bestEval3){
+      if(Math.random() < 0.5){
+        return {bestMove : bestMove, bestPiece : flattPiece}
+      }
+      else {
+        bestPiece = standPiece
+        this.piece_objects[bestPiece].isstanding = true;
+        this.piece_objects[bestPiece].rotation.x = -Math.PI / 2;
+        return {bestMove : bestMove2, bestPiece : bestPiece}
+      }
+    }
+    else if(bestEval == bestEval3 && bestEval > bestEval2){
+      if(Math.random() < 0.5){
+        return {bestMove : bestMove, bestPiece : flattPiece}
+      }
+      else {
+        return {bestMove : bestMove3, bestPiece : capPiece}
+      }
+    }
+    else if(bestEval2 == bestEval3 && bestEval2 > bestEval){
+      if(Math.random() < 0.5){
+        bestPiece = standPiece
+        this.piece_objects[bestPiece].isstanding = true;
+        this.piece_objects[bestPiece].rotation.x = -Math.PI / 2;
+        return {bestMove : bestMove2, bestPiece : bestPiece}
+      }
+      else {
+        return {bestMove : bestMove3, bestPiece : capPiece}
+      }
+    }
+    return {bestMove:PositionMove,bestPiece:bestPiece};
   },
 
   choosePiece: function () {
