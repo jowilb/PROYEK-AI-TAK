@@ -19,7 +19,6 @@ var mouse = new THREE.Vector2();
 var offset = new THREE.Vector3();
 
 var chooseBestPiece
-var pause = true;
 
 var materials = {
   images_root_path: "images/",
@@ -919,8 +918,24 @@ var board = {
     return moves;
   },
 
-  getAllEmptyPositionsBaseStone: function () {
-
+  getSingleAllPosibleMoves: function (Piece) {
+    let moves = [];
+    let directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    for (let i = 0; i < directions.length; i++) {
+      let file = Piece.file + directions[i][0];
+      let rank = Piece.rank + directions[i][1];
+      if (file >= 0 && file < this.size && rank >= 0 && rank < this.size) {
+        if(this.sq[file][rank].length !== 0){
+          if (!this.sq[file][rank][this.sq[file][rank].length - 1].isstanding && !this.sq[file][rank][this.sq[file][rank].length - 1].iscapstone) {
+            moves.push({ file: file, rank: rank });
+          }
+        }
+        else {
+          moves.push({ file: file, rank: rank });
+        }
+      }
+    }
+    return moves;
   },
 
   getPieceNotOnSquare: function (color,type) {
@@ -936,8 +951,13 @@ var board = {
     }
   },
 
+  getPieceOnSquare : function (color){
+    return this.piece_objects.filter(
+      (piece) => piece.iswhitepiece === color && piece.onsquare
+    );
+  },
 
-  calculateMinimax: function (depth, isMaximizingPlayer) {
+  calculateAddMinimax: function (depth, isMaximizingPlayer) {
     if (depth === 0 || this.isPlayEnded) {
       return this.calculateStaticBoardEvaluator();
     }
@@ -952,7 +972,7 @@ var board = {
       if(flattPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[flattPiece]);
-          let eval = this.calculateMinimax(depth - 1, false);
+          let eval = this.calculateAddMinimax(depth - 1, false);
           this.sq[moves[i].file][moves[i].rank].pop();
           maxEval = Math.max(maxEval, eval);
         }
@@ -963,7 +983,7 @@ var board = {
         for (let i = 0; i < moves.length; i++) {
           this.piece_objects[standPiece].isstanding = true;
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[standPiece]);
-          let eval = this.calculateMinimax(depth - 1, false);
+          let eval = this.calculateAddMinimax(depth - 1, false);
           this.sq[moves[i].file][moves[i].rank].pop();
           this.piece_objects[standPiece].isstanding = false
           maxEval2 = Math.max(maxEval2, eval);
@@ -974,7 +994,7 @@ var board = {
       if(capPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[capPiece]);
-          let eval = this.calculateMinimax(depth - 1, false);
+          let eval = this.calculateAddMinimax(depth - 1, false);
           this.sq[moves[i].file][moves[i].rank].pop();
           maxEval3 = Math.max(maxEval3, eval);
         }
@@ -991,7 +1011,7 @@ var board = {
       if(flattPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[flattPiece]);
-          let eval = this.calculateMinimax(depth - 1, true);
+          let eval = this.calculateAddMinimax(depth - 1, true);
           this.sq[moves[i].file][moves[i].rank].pop();
           minEval = Math.min(minEval, eval);
         }
@@ -1002,7 +1022,7 @@ var board = {
         for (let i = 0; i < moves.length; i++) {
           this.piece_objects[standPiece].isstanding = true;
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[standPiece]);
-          let eval = this.calculateMinimax(depth - 1, true);
+          let eval = this.calculateAddMinimax(depth - 1, true);
           this.sq[moves[i].file][moves[i].rank].pop();
           this.piece_objects[standPiece].isstanding = false
           minEval2 = Math.min(minEval2, eval);
@@ -1013,7 +1033,7 @@ var board = {
       if(capPiece != -1){
         for (let i = 0; i < moves.length; i++) {
           this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[capPiece]);
-          let eval = this.calculateMinimax(depth - 1, true);
+          let eval = this.calculateAddMinimax(depth - 1, true);
           this.sq[moves[i].file][moves[i].rank].pop();
           minEval3 = Math.min(minEval3, eval);
         }
@@ -1022,7 +1042,51 @@ var board = {
     }
   },
 
-  getBestMove: function (depth, isMaximizingPlayer) {
+  calculateMoveMinimax: function (depth, isMaximizingPlayer) {
+    if (depth === 0 || this.isPlayEnded) {
+      return this.calculateStaticBoardEvaluator();
+    }
+
+    if (isMaximizingPlayer) {//Max
+      let maxEval = -Infinity;
+
+      let allPiece = this.getPieceOnSquare(true);//choose all piece
+      if(allPiece != -1){
+        for (let i = 0; i < allPiece.length; i++) {
+          let moves = this.getSingleAllPosibleMoves(allPiece[i].onsquare);
+          let piece = this.getPositionPiece(allPiece[i].onsquare.file,allPiece[i].onsquare.rank);//get index piece
+          for (let j = 0; j < moves.length; j++) {
+            this.sq[moves[j].file][moves[j].rank].push(this.piece_objects[piece]);
+            let eval = this.calculateMoveMinimax(depth - 1, false);
+            this.sq[moves[j].file][moves[j].rank].pop();
+            maxEval = Math.max(maxEval, eval);
+          }
+        }
+      }
+
+      return maxEval
+    } else {//Min
+      let minEval = Infinity
+
+      let allPiece = this.getPieceOnSquare(false);//choose all piece
+      if(allPiece != -1){
+        for (let i = 0; i < allPiece.length; i++) {
+          let moves = this.getSingleAllPosibleMoves(allPiece[i].onsquare);
+          let piece = this.getPositionPiece(allPiece[i].onsquare.file,allPiece[i].onsquare.rank);//get index piece
+          for (let j = 0; j < moves.length; j++) {
+            this.sq[moves[j].file][moves[j].rank].push(this.piece_objects[piece]);
+            let eval = this.calculateMoveMinimax(depth - 1, true);
+            this.sq[moves[j].file][moves[j].rank].pop();
+            minEval = Math.min(minEval, eval);
+          }
+        }
+      }
+
+      return minEval;
+    }
+  },
+
+  getBestAdd: function (depth, isMaximizingPlayer) {
     let bestEval = isMaximizingPlayer ? -Infinity : Infinity;
     let bestEval2 = isMaximizingPlayer ? -Infinity : Infinity;
     let bestEval3 = isMaximizingPlayer ? -Infinity : Infinity;
@@ -1038,7 +1102,7 @@ var board = {
     if(flattPiece != -1){
       for (let i = 0; i < moves.length; i++) {
         this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[flattPiece]);
-        let eval = this.calculateMinimax(depth - 1, !isMaximizingPlayer);
+        let eval = this.calculateAddMinimax(depth - 1, !isMaximizingPlayer);
         this.sq[moves[i].file][moves[i].rank].pop();
         if (isMaximizingPlayer ? eval > bestEval : eval < bestEval) {
           bestEval = eval;
@@ -1052,7 +1116,7 @@ var board = {
       for (let i = 0; i < moves.length; i++) {
         this.piece_objects[standPiece].isstanding = true;
         this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[standPiece]);
-        let eval = this.calculateMinimax(depth - 1, !isMaximizingPlayer);
+        let eval = this.calculateAddMinimax(depth - 1, !isMaximizingPlayer);
         this.sq[moves[i].file][moves[i].rank].pop();
         this.piece_objects[standPiece].isstanding = false
         if (isMaximizingPlayer ? eval > bestEval2 : eval < bestEval2) {
@@ -1066,7 +1130,7 @@ var board = {
     if(capPiece != -1){
       for (let i = 0; i < moves.length; i++) {
         this.sq[moves[i].file][moves[i].rank].push(this.piece_objects[capPiece]);
-        let eval = this.calculateMinimax(depth - 1, !isMaximizingPlayer);
+        let eval = this.calculateAddMinimax(depth - 1, !isMaximizingPlayer);
         this.sq[moves[i].file][moves[i].rank].pop();
         if (isMaximizingPlayer ? eval > bestEval3 : eval < bestEval3) {
           bestEval3 = eval;
@@ -1120,6 +1184,30 @@ var board = {
     return {bestMove:PositionMove,bestPiece:bestPiece};
   },
 
+  getBestMove: function (depth, isMaximizingPlayer) {
+    let bestEval = isMaximizingPlayer ? -Infinity : Infinity;
+    let bestMove;
+    let bestPiece;
+
+    let allPiece = this.getPieceOnSquare(true);//choose all piece
+    for (let i = 0; i < allPiece.length; i++) {
+      let moves = this.getSingleAllPosibleMoves(allPiece[i].onsquare);//get all possible board
+      let piece = this.getPositionPiece(allPiece[i].onsquare.file,allPiece[i].onsquare.rank);//get index piece
+      for (let j = 0; j < moves.length; j++) {
+        this.sq[moves[j].file][moves[j].rank].push(this.piece_objects[piece]);
+        let eval = this.calculateMoveMinimax(depth - 1, !isMaximizingPlayer);
+        this.sq[moves[j].file][moves[j].rank].pop();
+        if(isMaximizingPlayer? eval > bestEval : eval < bestEval){
+          bestEval = eval;
+          bestMove = moves[j];
+          bestPiece = piece;
+        }
+      }
+    }
+
+    return {bestMove:bestMove,bestPiece:bestPiece};
+  },
+
   choosePiece: function () {
     if (this.movecount == 0) {
       return 1;
@@ -1169,7 +1257,7 @@ var board = {
             if (countblack >= 1) {
               for (let k = 0; k < this.size; k++) {
                 if (this.sq[i][k].length === 0) {
-                  position = this.getPosition(i, k);
+                  position = this.getPositionBoard(i, k);
                   block = true;
                   break;
                 }
@@ -1191,7 +1279,7 @@ var board = {
               if (countblack >= 3) {
                 for (let k = 0; k < this.size; k++) {
                   if (this.sq[k][i].length === 0) {
-                    position = this.getPosition(k, i);
+                    position = this.getPositionBoard(k, i);
                     block = true;
                     break;
                   }
@@ -1238,44 +1326,51 @@ var board = {
               var valid = this.movementAddPiece(i, j);
               console.log("AI Valid", valid);
               if (valid == "up") {
-                position = this.getPosition(i, j + 1);
+                position = this.getPositionBoard(i, j + 1);
                 choose = 1;
                 break;
               }
               if (valid == "down") {
-                position = this.getPosition(i, j - 1);
+                position = this.getPositionBoard(i, j - 1);
                 choose = 1;
                 break;
               }
               if (valid == "left") {
-                position = this.getPosition(i - 1, j);
+                position = this.getPositionBoard(i - 1, j);
                 choose = 1;
                 break;
               }
               if (valid == "right") {
-                position = this.getPosition(i + 1, j);
+                position = this.getPositionBoard(i + 1, j);
                 choose = 1;
                 break;
               }
             }
           }
         }
-       
-      } else {
-      }
-      var Best = this.getBestMove(3, true);
-      chooseBestPiece = Best.bestPiece;
-      position = this.getPosition(Best.bestMove.file, Best.bestMove.rank);
+      } 
+      var Add = this.getBestAdd(3, true);
+      var Move = this.getBestMove(3, true);
+      chooseBestPiece = Move.bestPiece;
+      position = this.getPositionBoard(Move.bestMove.file, Move.bestMove.rank);
     }
     block = false;
     return position;
   },
 
-  getPosition: function (file, rank) {
+  getPositionBoard: function (file, rank) {
     let matchingBoardObjects = this.board_objects.filter(
       (obj) => obj.file === file && obj.rank === rank
     );
     let index = this.board_objects.indexOf(matchingBoardObjects[0]);
+    return index;
+  },
+
+  getPositionPiece: function (file, rank) {
+    let matchingPieceObjects = this.piece_objects.filter(
+      (obj) => obj.onsquare != null && obj.onsquare.file === file && obj.onsquare.rank === rank
+    );
+    let index = this.piece_objects.indexOf(matchingPieceObjects[0]);
     return index;
   },
 
@@ -1285,10 +1380,8 @@ var board = {
     }
 
     //pilih posisi board
-    pause = false
-    var randomPos = this.choosePosition();
-    var randomPiece = this.choosePiece();
-    pause = true
+    var randomPos = this.choosePosition()
+    var randomPiece = this.choosePiece()
     // while (this.board_objects[randomPos].onsquare) {
     //   randomPos = Math.floor(Math.random() * 25);
     // }
@@ -1772,25 +1865,13 @@ var board = {
     dontanimate = false;
   },
   gameover: function (premsg) {
-    if(!pause) return
-    premsg = typeof premsg === "undefined" ? "" : premsg + " ";
-    console.log("gameover " + this.result);
+    premsg = (typeof premsg === 'undefined') ? "" : premsg + " ";
+    console.log('gameover ' + this.result);
     this.notate(this.result);
-
-    let result = this.result;
-    if (result === "R-0") {
-      // result = "White wins";
-      result = "AI wins";
-    } else if (result === "0-R") {
-      // result = "Black wins";
-      result = "Player wins";
-    } else if (result === "1/2-1/2") {
-      result = "Draw";
-    }
-    alert("danger", premsg + "Game over!! " + result);
+    alert("info", premsg + "Game over!! " + this.result);
     this.scratch = true;
     this.isPlayEnded = true;
-  },
+},
   newgame: function (sz, col) {
     this.clear();
     this.create(sz, col, false, false);
@@ -1798,72 +1879,78 @@ var board = {
   },
 
   findwhowon: function () {
-    if(!pause) return
-    var whitec = 0,
-      blackc = 0;
+    var whitec = 0, blackc = 0;
     for (i = 0; i < this.size; i++) {
-      for (j = 0; j < this.size; j++) {
-        var stk = this.sq[i][j];
-        if (stk.length === 0) continue;
-        var top = stk[stk.length - 1];
-        if (top.isstanding && !top.iscapstone) continue;
-        if (top.iswhitepiece) whitec++;
-        else blackc++;
-      }
+        for (j = 0; j < this.size; j++) {
+            var stk = this.sq[i][j];
+            if (stk.length === 0)
+                continue;
+            var top = stk[stk.length - 1];
+            if (top.isstanding && !top.iscapstone)
+                continue;
+            if (top.iswhitepiece)
+                whitec++;
+            else
+                blackc++;
+        }
     }
-    if (whitec === blackc) this.result = "1/2-1/2";
-    else if (whitec > blackc) this.result = "F-0";
-    else this.result = "0-F";
-  },
+    if (whitec === blackc)
+        this.result = "1/2-1/2";
+    else if (whitec > blackc)
+        this.result = "F-0";
+    else
+        this.result = "0-F";
+},
 
   checkroadwin: function () {
-    if(!pause) return
     for (var i = 0; i < this.size; i++) {
-      for (var j = 0; j < this.size; j++) {
-        var cur_st = this.sq[i][j];
-        cur_st.graph = -1;
-        if (cur_st.length === 0) continue;
+        for (var j = 0; j < this.size; j++) {
+            var cur_st = this.sq[i][j];
+            cur_st.graph = -1;
+            if (cur_st.length === 0)
+                continue;
 
-        var ctop = cur_st[cur_st.length - 1];
-        if (ctop.isstanding && !ctop.iscapstone) continue;
+            var ctop = cur_st[cur_st.length - 1];
+            if (ctop.isstanding && !ctop.iscapstone)
+                continue;
 
-        cur_st.graph = (i + j * this.size).toString();
+            cur_st.graph = (i + j * this.size).toString();
 
-        if (i - 1 >= 0) {
-          var left_st = this.sq[i - 1][j];
-          if (left_st.length !== 0) {
-            var ltop = left_st[left_st.length - 1];
-            if (!(ltop.isstanding && !ltop.iscapstone)) {
-              if (ctop.iswhitepiece === ltop.iswhitepiece) {
-                for (var r = 0; r < this.size; r++) {
-                  for (var c = 0; c < this.size; c++) {
-                    if (this.sq[r][c].graph === cur_st.graph) {
-                      this.sq[r][c].graph = left_st.graph;
+            if (i - 1 >= 0) {
+                var left_st = this.sq[i - 1][j];
+                if (left_st.length !== 0) {
+                    var ltop = left_st[left_st.length - 1];
+                    if (!(ltop.isstanding && !ltop.iscapstone)) {
+                        if (ctop.iswhitepiece === ltop.iswhitepiece) {
+                            for (var r = 0; r < this.size; r++) {
+                                for (var c = 0; c < this.size; c++) {
+                                    if (this.sq[r][c].graph === cur_st.graph) {
+                                        this.sq[r][c].graph = left_st.graph;
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
-        }
-        if (j - 1 >= 0) {
-          var top_st = this.sq[i][j - 1];
-          if (top_st.length !== 0) {
-            var ttop = top_st[top_st.length - 1];
-            if (!(ttop.isstanding && !ttop.iscapstone)) {
-              if (ctop.iswhitepiece === ttop.iswhitepiece) {
-                for (var r = 0; r < this.size; r++) {
-                  for (var c = 0; c < this.size; c++) {
-                    if (this.sq[r][c].graph === cur_st.graph) {
-                      this.sq[r][c].graph = top_st.graph;
+            if (j - 1 >= 0) {
+                var top_st = this.sq[i][j - 1];
+                if (top_st.length !== 0) {
+                    var ttop = top_st[top_st.length - 1];
+                    if (!(ttop.isstanding && !ttop.iscapstone)) {
+                        if (ctop.iswhitepiece === ttop.iswhitepiece) {
+                            for (var r = 0; r < this.size; r++) {
+                                for (var c = 0; c < this.size; c++) {
+                                    if (this.sq[r][c].graph === cur_st.graph) {
+                                        this.sq[r][c].graph = top_st.graph;
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
         }
-      }
     }
     var whitewin = false;
     var blackwin = false;
@@ -1877,33 +1964,41 @@ var board = {
     //            }
     //            console.log("=======");
     for (var tr = 0; tr < this.size; tr++) {
-      var tsq = this.sq[tr][0];
-      var no = tsq.graph;
-      if (no === -1) continue;
-      for (var br = 0; br < this.size; br++) {
-        var brno = this.sq[br][this.size - 1].graph;
-        if (no === brno) {
-          if (tsq[tsq.length - 1].iswhitepiece) whitewin = true;
-          else blackwin = true;
+        var tsq = this.sq[tr][0];
+        var no = tsq.graph;
+        if (no === -1)
+            continue;
+        for (var br = 0; br < this.size; br++) {
+            var brno = this.sq[br][this.size - 1].graph;
+            if (no === brno) {
+                if (tsq[tsq.length - 1].iswhitepiece)
+                    whitewin = true;
+                else
+                    blackwin = true;
+            }
         }
-      }
     }
     for (var tr = 0; tr < this.size; tr++) {
-      var tsq = this.sq[0][tr];
-      var no = tsq.graph;
-      if (no === -1) continue;
-      for (var br = 0; br < this.size; br++) {
-        var brno = this.sq[this.size - 1][br].graph;
-        if (no === brno) {
-          if (tsq[tsq.length - 1].iswhitepiece) whitewin = true;
-          else blackwin = true;
+        var tsq = this.sq[0][tr];
+        var no = tsq.graph;
+        if (no === -1)
+            continue;
+        for (var br = 0; br < this.size; br++) {
+            var brno = this.sq[this.size - 1][br].graph;
+            if (no === brno) {
+                if (tsq[tsq.length - 1].iswhitepiece)
+                    whitewin = true;
+                else
+                    blackwin = true;
+            }
         }
-      }
     }
     if (whitewin && blackwin)
-      this.result = this.movecount % 2 == 0 ? "R-0" : "0-R";
-    else if (whitewin) this.result = "R-0";
-    else if (blackwin) this.result = "0-R";
+        this.result = (this.movecount%2 == 0)?"R-0":"0-R";
+    else if (whitewin)
+        this.result = "R-0";
+    else if (blackwin)
+        this.result = "0-R";
 
     if (whitewin || blackwin) {
       this.gameover();
@@ -1912,15 +2007,15 @@ var board = {
     return false;
   },
   checksquaresover: function () {
-    if(!pause) return false
     for (i = 0; i < this.size; i++)
-      for (j = 0; j < this.size; j++)
-        if (this.sq[i][j].length === 0) return false;
+        for (j = 0; j < this.size; j++)
+            if (this.sq[i][j].length === 0)
+                return false;
 
     this.findwhowon();
     this.gameover("All spaces covered.");
     return true;
-  },
+},
   reverseboard: function () {
     if (this.isPlayEnded) {
       return;
