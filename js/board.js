@@ -893,65 +893,94 @@ var board = {
   },
 
   movementAddPiece: function (file, rank) {
+    // file (kolom) dan rank (baris) untuk meletakkan piece.
+
+    // Cek kotak di bawah:
     if (rank + 1 < 5 && this.sq[file][rank + 1].length === 0) {
+      // Kotak di bawah kosong, piece diletakkan di bawah.
       return "up";
+
+      // Cek kotak di atas:
     } else if (rank - 1 >= 0 && this.sq[file][rank - 1].length === 0) {
+      // Kotak di atas kosong, piece diletakkan di atas.
       return "down";
+
+      // Cek kotak di kiri:
     } else if (file - 1 >= 0 && this.sq[file - 1][rank].length === 0) {
+      // Kotak di kiri kosong, piece diletakkan di kiri.
       return "left";
+
+      // Cek kotak di kanan:
     } else if (file + 1 < 5 && this.sq[file + 1][rank].length === 0) {
+      // Kotak di kanan kosong, piece diletakkan di kanan.
       return "right";
     } else {
+      // Semua kotak di sekitar sudah terisi, piece tidak bisa diletakkan.
       return "none";
     }
   },
 
   getAllEmptyPositions: function () {
     let moves = [];
+
     for (let file = 0; file < this.size; file++) {
       for (let rank = 0; rank < this.size; rank++) {
         if (this.sq[file][rank].length === 0) {
+          // cek kotak kosong atau tidak
           moves.push({ file: file, rank: rank });
         }
       }
     }
+
     return moves;
   },
 
   getSingleAllPosibleMoves: function (Piece) {
+    // buat mencari semua kemungkinan gerakan untuk piece
     let moves = [];
+
     let directions = [
-      [0, 1],
-      [0, -1],
-      [1, 0],
-      [-1, 0],
+      [0, 1], // Ke atas
+      [0, -1], // Ke bawah
+      [1, 0], // Ke kanan
+      [-1, 0], // Ke kiri
     ];
+
     for (let i = 0; i < directions.length; i++) {
+      // Hitung posisi yang dituju berdasarkan arah:
       let file = Piece.file + directions[i][0];
       let rank = Piece.rank + directions[i][1];
+
+      // Cek apakah direction valid dan tidak melebihi batas board
       if (file >= 0 && file < this.size && rank >= 0 && rank < this.size) {
+        // Cek apakah direction tujuan bisa ditumpuk atau tidak
         if (this.sq[file][rank].length !== 0) {
+          // Kotak tidak kosong, capstone dan wall tidak bisa ditumpuk
           if (
             !this.sq[file][rank][this.sq[file][rank].length - 1].isstanding &&
             !this.sq[file][rank][this.sq[file][rank].length - 1].iscapstone
           ) {
+            // Bisa dimasuki, tambahkan ke daftar gerakan:
             moves.push({ file: file, rank: rank });
           }
         } else {
+          // Kotak kosong, tambahkan ke daftar gerakan:
           moves.push({ file: file, rank: rank });
         }
       }
     }
+
     return moves;
   },
 
   getPieceNotOnSquare: function (color, type) {
+    // buat mencari piece yang belum diletakkan
     if (type) {
       return this.piece_objects.findIndex(
         (piece) =>
           piece.iswhitepiece === color && !piece.iscapstone && !piece.onsquare
       );
-    } else if (!type) {
+    } else {
       return this.piece_objects.findIndex(
         (piece) =>
           piece.iswhitepiece === color && piece.iscapstone && !piece.onsquare
@@ -1228,19 +1257,6 @@ var board = {
     }
     var randomIndex = chooseBestPiece; //buat ngambil selalu warna putih soalnya putih selalu genap
 
-    // while (
-    //   this.piece_objects[randomIndex].onsquare &&
-    // !this.piece_objects[randomIndex].iswhitepiece
-    // ) {
-    //   randomIndex = Math.floor(Math.random() * 22) * 2;
-    // }
-
-    // if (!this.piece_objects[randomIndex].iswhitepiece) {
-    //   while (!this.piece_objects[randomIndex].iswhitepiece) {
-    //     randomIndex = Math.floor(Math.random() * 22) * 2;
-    //   }
-    // }
-
     return randomIndex;
   },
 
@@ -1263,12 +1279,14 @@ var board = {
       for (let i = 0; i < this.size; i++) {
         var countblack = 0;
         for (let j = 0; j < this.size; j++) {
-          var cur_st = this.sq[i][j];
-          if (cur_st.length === 0) continue;
-          var ctop = cur_st[cur_st.length - 1];
+          var cur_st = this.sq[i][j]; // untuk cek apakah ada piece di board yang ingin diisi
+          if (cur_st.length === 0) continue; // jika tidak ada piece maka lanjut
+          var ctop = cur_st[cur_st.length - 1]; // cek piece teratas
           if (!ctop.iswhitepiece) {
+            // jika piece teratas bukan piece putih
             countblack++;
             if (countblack >= 1) {
+              // jika piece hitam sudah 2
               for (let k = 0; k < this.size; k++) {
                 if (this.sq[i][k].length === 0) {
                   position = this.getPositionBoard(i, k);
@@ -1303,31 +1321,6 @@ var board = {
           }
         }
       }
-
-      // if (block) {
-      //   for (let i = 0; i < this.size; i++) {
-      //     for (let j = 0; j < this.size; j++) {
-      //       var cur_st = this.sq[i][j];
-      //       if (cur_st.length === 0) continue;
-      //       var ctop = cur_st[cur_st.length - 1];
-      //       if (!ctop.iswhitepiece) {
-      //         var valid = this.movementAddPiece(i, j);
-      //         if (valid == "up") {
-      //           position = this.getPosition(i, j + 1);
-      //         }
-      //         if (valid == "down") {
-      //           position = this.getPosition(i, j - 1);
-      //         }
-      //         if (valid == "left") {
-      //           position = this.getPosition(i - 1, j);
-      //         }
-      //         if (valid == "right") {
-      //           position = this.getPosition(i + 1, j);
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
 
       var choose = 0;
       if (choose == 0 && !block) {
@@ -1391,7 +1384,7 @@ var board = {
     return index;
   },
 
-  resetBoard: function () {},
+  // resetBoard: function () {},
 
   ai_turn: function () {
     if (this.isPlayEnded) {
@@ -1401,33 +1394,9 @@ var board = {
     //pilih posisi board
     var randomPos = this.choosePosition();
     var randomPiece = this.choosePiece();
-    // while (this.board_objects[randomPos].onsquare) {
-    //   randomPos = Math.floor(Math.random() * 25);
-    // }
-
-    // if (this.movecount === 0) {
-    //   while (this.piece_objects[randomPiece].iswhitepiece) {
-    //     randomPiece = Math.floor(Math.random() * 10);
-    //   }
-    // }
-    // else {
-    //   while (!this.piece_objects[randomPiece].iswhitepiece) {
-    //     randomPiece = Math.floor(Math.random() * 10);
-    //   }
-    // }
-
-    // if (this.piece_objects[randomPiece].onsquare) {
-    //   while (this.piece_objects[randomPiece].onsquare) {
-    //     randomPiece = Math.floor(Math.random() * 10);
-    //   }
-    // } else {
-    //   cek apakah di board yang ingin diisi sudah ada piece
-    //   while (this.board_objects[randomPos].onsquare) {
-    //     randomPos = Math.floor(Math.random() * 25);
-    //   }
-    // }
 
     this.pushPieceOntoSquare(
+      // push piece ke board
       this.board_objects[randomPos],
       this.piece_objects[randomPiece]
     );
@@ -1478,9 +1447,6 @@ var board = {
     // document.getElementById("turnText").innerHTML = "AI's Turn";
     // this.mycolor = this.mycolor.iswhitepiece ? "black" : "white";
     setTimeout(() => this.incmovecnt(), 2000);
-    console.log(this.piece_objects);
-    console.log(this.board_objects);
-    console.log(this.sq);
   },
 
   incmovecnt: function () {
@@ -1887,6 +1853,7 @@ var board = {
 
     dontanimate = false;
   },
+
   gameover: function (premsg) {
     premsg = typeof premsg === "undefined" ? "" : premsg + " ";
     console.log("gameover " + this.result);
@@ -2175,12 +2142,14 @@ var board = {
     row.insertCell(2);
     return row;
   },
+
   notatePmove: function (sqname, pos) {
     if (pos === "W") pos = "S";
     else if (pos === "C") pos = "C";
     else pos = "";
     this.notate(pos + sqname.toLowerCase());
   },
+
   //all params are nums
   notateMmove: function (stf, str, endf, endr, nos) {
     var dir = "";
@@ -2484,19 +2453,21 @@ var board = {
     }
     return "OUTSIDE";
   },
+
   checkifmymove: function () {
-    if (this.isPlayEnded) return false;
+    if (this.isPlayEnded) return false; // kalo game udah selesai, gak bisa gerak
     if (this.scratch) return true;
     if (this.observing) return false;
     var tomove = this.movecount % 2 === 0 ? "white" : "black";
     return tomove === this.mycolor;
   },
+
   is_white_piece_to_move: function () {
-    // make the first move white and all player only moves once
     if (this.movecount === 1) return true;
     if (this.movecount === 0) return false;
     return this.movecount % 2 === 0;
   },
+
   select: function (obj) {
     obj.position.y += stack_selection_height;
     this.selected = obj;
