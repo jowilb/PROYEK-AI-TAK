@@ -1399,7 +1399,7 @@ var board = {
           }
         }
       }
-      var Best = this.getBestMovement(3, true);
+      var Best = this.getBestMovement(5, true);
       console.log(Best);
       chooseBestPiece = Best.bestPiece;
       position = this.getPositionBoard(Best.bestMove.file, Best.bestMove.rank);
