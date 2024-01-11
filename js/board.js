@@ -1052,6 +1052,7 @@ var board = {
 
   calculateMinimax: function (depth, isMaximizingPlayer) {
     if (depth === 0) {
+      console.log(this.calculateStaticBoardEvaluator())
       return this.calculateStaticBoardEvaluator();
     }
 
